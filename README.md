@@ -21,7 +21,7 @@ Add this to your repository's `CLAUDE.md`, `AGENTS.md` or equivalent agent instr
 
 For any change to UI (layout, styling, components, icons, motion or user-visible text), read and
 follow Brave's product design guidelines:
-https://raw.githubusercontent.com/aguscruiz/design-styles/v1.0.0/product-design.md
+https://raw.githubusercontent.com/aguscruiz/brave-design/v1.0.0/product-design.md
 
 Start with its "Using this file" section. This repository's own design guidelines, if any, add to
 it.
