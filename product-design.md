@@ -91,11 +91,18 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
 - **One semantic layer per product.** Each product names its roles once, in one file, and aliases
   each to a Nala token. Components read the roles, not raw Nala names, so a Nala upgrade or a theme
   change is made in one file.
-- **No raw values.** No hex colours, no hand-written shadows, no pixel values off the Nala spacing
-  scale (`spacing-xs` 2, `s` 4, `m` 8, `l` 12, `xl` 16, `2xl` 24, `3xl` 32, `4xl` 40, `5xl` 48 and
-  up), no radius off the radius scale, and no icon size off the icon scale (`icon-xs` 16, `s` 18,
-  `m` 20, `l` 24, `xl` 32). A 1px hairline border is the one allowed literal. A value Nala does not have is added as a role in
-  the semantic layer, and the gap is raised with Nala so the role can alias a real token later.
+- **No raw values.** No hex colours, no hand-written shadows or timing, and nothing off Nala's
+  scales:
+  - spacing: `spacing-none` 0, `xs` 2, `s` 4, `m` 8, `l` 12, `xl` 16, `2xl` 24, `3xl` 32,
+    `4xl` 40, `5xl` 48, `6xl` 64, `7xl` 80, `8xl` 96, `9xl` 160
+  - radius: `radius-2xs` 1, `xs` 2, `s` 4, `m` 8, `l` 12, `xl` 16, `xxl` 24 (not `2xl`), `full`,
+    plus the platform radii `radius-android-dialog` 28, `radius-android-list-group` 20,
+    `radius-ios-modals` 38, `radius-ios-settings-groups` 26 and the `radius-browserwindow-*` and
+    `radius-browsercontent-*` window corners
+  - icon size: `icon-xs` 16, `s` 18, `m` 20, `l` 24, `xl` 32
+
+  A 1px hairline border is the one allowed literal. A value Nala does not have is added as a role
+  in the semantic layer, and the gap is raised with Nala so the role can alias a real token later.
 - **Copies name their source.** Where a platform cannot read Nala at build time, such as terminal
   colours, a literal value is copied from the Nala JSON and the comment names the token it copies
   (for example `color-primitive-brands-rorange-1` for Brave orange).
@@ -224,15 +231,46 @@ Text("Saved").foregroundStyle(Color(red: 0.11, green: 0.11, blue: 0.11))
 
 Motion explains what changed. It is never decoration.
 
-- **Use Nala's motion tokens.** Durations are `duration-xs` (50ms), `s` (100ms), `m` (200ms),
-  `l` (300ms) and `xl` (500ms). Easings are `easing-out` for things that enter, `easing-in` for
-  things that leave, `easing-in-out` for things that move or change in place, and `easing-linear`
-  only for progress. `easing-in-out-back` overshoots and is kept for rare moments of emphasis. On
-  Android and iOS, use the platform's system motion (Material springs, SwiftUI's standard
-  animations) for platform components, and Nala durations for anything custom.
-- **Short and proportional.** Small changes (hover, press, a toggle) use `xs` or `s`. Menus,
-  tooltips and popovers use `s` or `m`. Panels, sheets and page transitions use `m` or `l`. Nothing
-  routine uses more than `l`. Leaving is quicker than entering.
+| Token | Value | Use |
+| --- | --- | --- |
+| `duration-xs` | 50ms | Hover, press and toggle. Also the reduced-motion replacement. |
+| `duration-s` | 100ms | Small changes, tooltips, small menus and popovers. |
+| `duration-m` | 200ms | Larger menus and popovers, small panels. |
+| `duration-l` | 300ms | Panels, sheets, page transitions. The longest routine duration. |
+| `duration-xl` | 500ms | Not an animation length. The delay before a loading indicator. |
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `easing-out` | `cubic-bezier(0, 0, 0.58, 1)` | Things that enter. |
+| `easing-in` | `cubic-bezier(0.5, 0, 0.5, 1)` | Things that leave. |
+| `easing-in-out` | `cubic-bezier(0.42, 0, 0.58, 1)` | Things that move or change in place. |
+| `easing-linear` | `cubic-bezier(0, 0, 1, 1)` | Progress only. |
+| `easing-in-out-back` | `cubic-bezier(0.7, -0.4, 0.4, 1.4)` | Overshoots. Rare emphasis only. |
+
+`easing-in` is symmetric, so it is closer to an in-out curve than a pure accelerate. It is still
+the token for exits. Do not write your own curve in its place; raise it with Nala instead.
+
+- **Use Nala's motion tokens.** They are generated for the web only: `--leo-duration-*` and
+  `--leo-easing-*` in the CSS variables, the `duration` and `easing` exports in `variables.ts`, and
+  `DurationS`, `EasingOut` and so on in the JSON. Skia, Android and iOS have none. On Android and
+  iOS, use the platform's system motion (Material springs, SwiftUI's standard animations) for
+  platform components. For anything custom, copy the values above and name the token, as
+  described under "Copies name their source":
+
+  ```kotlin
+  // duration-s, easing-out
+  PathInterpolator(0f, 0f, 0.58f, 1f)
+  ```
+
+  ```swift
+  // duration-s, easing-out
+  .timingCurve(0, 0, 0.58, 1, duration: 0.1)
+  ```
+
+- **Short and proportional.** Hover, press and toggle use `xs` or `s`. Tooltips and small menus
+  and popovers use `s`, larger ones use `m`. Panels, sheets and page transitions use `m` or `l`.
+  Nothing routine uses more than `l`. Leaving is quicker than entering, so give an exit the
+  shorter duration.
 - **Animate what is cheap.** Animate opacity and transform, not width, height, top or left, so
   motion never drops frames or shifts layout.
 - **Never block.** A person can act during an animation. Nothing waits for an animation to finish
@@ -583,39 +621,57 @@ the same standard as the browser does.
 ### Checks you can run
 
 These find the common mistakes. A match is not always wrong (a token file legitimately contains
-hex values), but each one needs a reason. Run them on the files the change touches, and adjust the
-paths to the repository.
+hex values, and the hex check also matches issue references such as `#1234`), but each one needs
+a reason. They look only at the lines the change adds, printed as `file:line:text`, and need
+bash, not POSIX `sh`. Adjust the paths to the repository.
 
-```sh
+```bash
 BASE=main  # the branch the change will merge into
 # Compares the working tree with $BASE; stage new files first so they are included.
-changed() { git diff --name-only "$BASE" -- "$@"; }
+added() {
+  git diff -U0 --diff-filter=d "$BASE" -- "$@" | awk '
+    /^\+\+\+ b\// { file = substr($0, 7); next }
+    /^@@/ { match($0, /\+[0-9]+/); line = substr($0, RSTART + 1, RLENGTH - 1); next }
+    /^\+/ { print file ":" line ":" substr($0, 2); line++ }'
+}
 
 # Web: raw colours, off-scale pixel values, hand-written shadows and timing, foreign icon sets.
 WEB=('*.css' '*.scss' '*.ts' '*.tsx' '*.svelte')
-changed "${WEB[@]}" | xargs grep -nE '#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\('
-changed "${WEB[@]}" | xargs grep -noE '\b[0-9]+px\b' \
-  | grep -vE ':(0|1|2|4|8|12|16|24|32|40|48|64|80|96|160)px$'
-changed "${WEB[@]}" | xargs grep -nE 'box-shadow:' | grep -v 'var(--leo-effect'
-changed "${WEB[@]}" | xargs grep -nE '(transition|animation)[^;]*[0-9.]+m?s\b' \
+added "${WEB[@]}" | grep -E \
+  '(^|[^&[:alnum:]_])#([[:xdigit:]]{3,4}|[[:xdigit:]]{6}|[[:xdigit:]]{8})\b|rgba?\(|hsla?\('
+# 18 and 20 are icon sizes, so they pass here. Radii 26, 28 and 38 are
+# platform radii and need a reason.
+added "${WEB[@]}" | awk -F: '{
+  t = $0; sub(/^[^:]*:[^:]*:/, "", t)
+  while (match(t, /[0-9.]*[0-9]px/)) {
+    v = substr(t, RSTART, RLENGTH - 2); t = substr(t, RSTART + RLENGTH)
+    if (v !~ /^(0|1|2|4|8|12|16|18|20|24|32|40|48|64|80|96|160)$/)
+      print $1 ":" $2 ": " v "px"
+  }
+}'
+added "${WEB[@]}" | grep -E 'box-shadow:' | grep -v 'var(--leo-effect'
+added "${WEB[@]}" | grep -E '(transition|animation)[^;]*[0-9.]+m?s\b' \
   | grep -v 'var(--leo-duration'
-changed "${WEB[@]}" | xargs grep -nE \
+added "${WEB[@]}" | grep -E \
   "from '(lucide|react-icons|@mui/icons|@heroicons|@fortawesome|material-symbols)"
 
+# Web: --leo-* variables that do not exist in the pinned Nala version (from the project root).
+npx leo-check
+
 # Every Leo icon name used exists in the pinned Nala version.
-changed "${WEB[@]}" | xargs grep -ohE '<(Icon|leo-icon)[^>]*name="[a-z0-9-]+"' \
+added "${WEB[@]}" | grep -ohE '<(Icon|leo-icon)[^>]*name="[a-z0-9-]+"' \
   | sed -E 's/.*name="([^"]+)".*/\1/' | sort -u | while read -r icon; do
     [ -f "node_modules/@brave/leo/icons/$icon.svg" ] || echo "missing icon: $icon"
   done
 
 # Desktop native views: literal colours instead of nala::kColor* ids.
-changed '*.cc' '*.h' | xargs grep -nE 'SkColorSetA?RGB|SK_Color[A-Z]'
+added '*.cc' '*.h' | grep -E 'SkColorSetA?RGB|SK_Color[A-Z]'
 
 # Android: literal colours and sizes in resources and layouts.
-changed '*.xml' | xargs grep -nE '"#[0-9a-fA-F]{6,8}"|"[0-9]+(dp|sp)"'
+added '*.xml' | grep -E '"#[0-9a-fA-F]{6,8}"|"[0-9]+(dp|sp)"'
 
 # iOS: literal colours and font sizes.
-changed '*.swift' | xargs grep -nE 'Color\(red:|UIColor\(red:|\.system\(size:'
+added '*.swift' | grep -E 'Color\(red:|UIColor\(red:|\.system\(size:'
 ```
 
 For web surfaces, run an automated accessibility check (for example

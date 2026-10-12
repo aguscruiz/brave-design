@@ -17,6 +17,18 @@ Adds rules, so this is a major change under the policy above:
 - Privacy and consent: measurement only through privacy-preserving analytics.
 - Agent and AI surfaces: screen reader announcements and message structure.
 
+Also in this release:
+
+- Nala scales: the full spacing scale (including `spacing-none`), the radius scale with its
+  platform radii, and a note that radius uses `xxl`, not `2xl`.
+- Motion: duration and easing tables with values, `duration-xl` described as the loading delay
+  rather than an animation length, which duration fits small and larger menus and popovers, where
+  motion tokens are generated, how to copy them on Android and iOS, and a note that `easing-in`
+  is symmetric.
+- Checks: they scan only the lines a change adds and need bash, the hex check ignores HTML
+  entities and odd lengths, the pixel check accepts icon sizes, and `npx leo-check` finds `--leo-*`
+  variables that do not exist.
+
 ## 1.0.0 - 2026-10-12
 
 First release of [`product-design.md`](product-design.md):
