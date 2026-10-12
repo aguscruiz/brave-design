@@ -114,6 +114,17 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
   Android system bar).
 - **Components before composition.** Use a Nala component when one exists. When none fits, build
   from Nala tokens and icons, keep it next to the other shared components, and propose it to Nala.
+- **A component's decisions belong to the component.** Tokens are the values a component can use.
+  The component decides which one: its shape, sizes, padding, kinds and states. For example, every
+  Nala button is a pill (`radius-full`), and an icon-only button (`fab`) is a circle. Its height
+  comes from its size (`tiny` to `jumbo`), and its colours come from its kind (`filled`, `outline`,
+  `plain`, `plain-faint`, `hero`). Do not restyle a Nala component, and do not rebuild one from
+  tokens with different choices. Using only real tokens does not make a lookalike correct.
+- **Where the component cannot be imported**, as in a standalone prototype, a mock-up, or a
+  platform build that lacks it, recreate it from its source in
+  [`src/components`](https://github.com/brave/leo/tree/main/src/components). Match its shape,
+  sizes, kinds and states, and say in the change description that it is a copy and which Nala
+  version it copies.
 - **Pin and upgrade deliberately.** Nala is pinned to a version or commit in each repository's
   package manifest. An upgrade is its own change, checked in light and dark on every surface that
   uses it.
@@ -466,6 +477,8 @@ the same standard as the browser does.
 ## Before calling a surface done
 
 - Every value comes from a Nala token or a semantic role that aliases one.
+- Every control that Nala has a component for uses that component, or copies it exactly
+  (shape, sizes, kinds and states).
 - Every icon is a Nala icon, or a system symbol where the platform requires one.
 - The surface follows the platform conventions listed above for where it ships.
 - It has been seen, in light and dark, at the smallest and largest supported size, with large text,
