@@ -18,8 +18,11 @@ This section is for coding agents and the people directing them.
    - a browser feature on iOS: [iOS](#ios-follow-liquid-glass-and-the-human-interface-guidelines)
    - anything outside the browser: [Separate apps](#separate-apps)
 
-   The [Principles](#principles), [Nala](#nala-is-the-source-of-design-values) and
-   [Writing](#writing) sections apply to every surface.
+   These sections apply to every surface: [Principles](#principles),
+   [Nala](#nala-is-the-source-of-design-values), [Motion](#motion), [Brand](#brand),
+   [Writing](#writing) and [Privacy and consent](#privacy-and-consent). A surface where an AI
+   model or agent produces content or takes actions also follows
+   [Agent and AI surfaces](#agent-and-ai-surfaces).
 2. **Find the repository's own layer.** Look for the repository's design guidelines, its semantic
    token file and its shared components before writing new UI. Reuse what is there.
 3. **Precedence.** Where a repository's guidelines are more specific than this file, follow the
@@ -88,7 +91,9 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
   each to a Nala token. Components read the roles, not raw Nala names, so a Nala upgrade or a theme
   change is made in one file.
 - **No raw values.** No hex colours, no hand-written shadows, no pixel values off the Nala spacing
-  scale (2, 4, 8, 12, 16, 24, 32, 40, 48 and up). A value Nala does not have is added as a role in
+  scale (`spacing-xs` 2, `s` 4, `m` 8, `l` 12, `xl` 16, `2xl` 24, `3xl` 32, `4xl` 40, `5xl` 48 and
+  up), no radius off the radius scale, and no icon size off the icon scale (`icon-xs` 16, `s` 18,
+  `m` 20, `l` 24, `xl` 32). A 1px hairline border is the one allowed literal. A value Nala does not have is added as a role in
   the semantic layer, and the gap is raised with Nala so the role can alias a real token later.
 - **Copies name their source.** Where a platform cannot read Nala at build time, such as terminal
   colours, a literal value is copied from the Nala JSON and the comment names the token it copies
@@ -112,6 +117,139 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
 - **Pin and upgrade deliberately.** Nala is pinned to a version or commit in each repository's
   package manifest. An upgrade is its own change, checked in light and dark on every surface that
   uses it.
+
+### Examples
+
+Names below follow Nala's generated output. If a name does not resolve, check the generated file
+for the platform (listed in the table above) rather than guessing a similar one.
+
+**Web: a semantic layer, then components that read it**
+
+```css
+/* The product's semantic layer: one file, every role aliases a Nala token. */
+:root {
+  --panel-background: var(--leo-color-container-background);
+  --panel-border: var(--leo-color-divider-subtle);
+  --panel-text: var(--leo-color-text-primary);
+  --panel-text-muted: var(--leo-color-text-secondary);
+}
+
+/* Do: components read roles and Nala scales. */
+.panel {
+  background: var(--panel-background);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--leo-radius-m);
+  padding: var(--leo-spacing-xl);
+  gap: var(--leo-spacing-m);
+  font: var(--leo-font-default-regular);
+  color: var(--panel-text);
+  transition: background var(--leo-duration-s) var(--leo-easing-out);
+}
+
+/* Don't: raw values, off-scale sizes, hand-written shadow and timing. */
+.panel {
+  background: #fff;
+  border: 1px solid #e4e4e5;
+  border-radius: 7px;
+  padding: 15px;
+  font-size: 14px;
+  color: #1c1c1d;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background 0.25s ease;
+}
+```
+
+```tsx
+// Do: Nala components and icons.
+import Button from '@brave/leo/react/button'
+import Icon from '@brave/leo/react/icon'
+
+<Button kind="filled" onClick={save}>Save</Button>
+<Button kind="plain-faint" onClick={cancel}>Cancel</Button>
+<Icon name="settings" />
+
+// Don't: a hand-styled <button>, or an icon from another set.
+import { Settings } from 'lucide-react'
+```
+
+**Desktop native views (C++)**
+
+```cpp
+// Do: resolve a Nala colour id through the colour provider, so themes and high contrast apply.
+SkColor text = GetColorProvider()->GetColor(nala::kColorTextPrimary);
+
+// Don't: a literal colour that ignores the theme.
+SkColor text = SkColorSetRGB(0x1C, 0x1C, 0x1D);
+```
+
+**Android**
+
+```xml
+<!-- Do: Nala colour resources, which switch with values-night. -->
+<TextView
+    android:textColor="@color/text_primary"
+    android:background="@color/container_background" />
+
+<!-- Don't -->
+<TextView
+    android:textColor="#1C1C1D"
+    android:background="#FFFFFF" />
+```
+
+**iOS**
+
+```swift
+// Do: Nala colours from the asset catalog, which follow light and dark.
+Text("Saved").foregroundStyle(Color(braveSystemName: .textPrimary))
+
+// Don't
+Text("Saved").foregroundStyle(Color(red: 0.11, green: 0.11, blue: 0.11))
+```
+
+## Motion
+
+Motion explains what changed. It is never decoration.
+
+- **Use Nala's motion tokens.** Durations are `duration-xs` (50ms), `s` (100ms), `m` (200ms),
+  `l` (300ms) and `xl` (500ms). Easings are `easing-out` for things that enter, `easing-in` for
+  things that leave, `easing-in-out` for things that move or change in place, and `easing-linear`
+  only for progress. `easing-in-out-back` overshoots and is kept for rare moments of emphasis. On
+  Android and iOS, use the platform's system motion (Material springs, SwiftUI's standard
+  animations) for platform components, and Nala durations for anything custom.
+- **Short and proportional.** Small changes (hover, press, a toggle) use `xs` or `s`. Menus,
+  tooltips and popovers use `s` or `m`. Panels, sheets and page transitions use `m` or `l`. Nothing
+  routine uses more than `l`. Leaving is quicker than entering.
+- **Animate what is cheap.** Animate opacity and transform, not width, height, top or left, so
+  motion never drops frames or shifts layout.
+- **Never block.** A person can act during an animation. Nothing waits for an animation to finish
+  before responding to input.
+- **No loops and no flashing.** Nothing animates continuously except a progress indicator while
+  work is happening. Nothing flashes more than three times a second.
+- **Reduced motion.** When the platform asks for reduced motion, replace movement with a short fade
+  or an instant change. No information is carried by motion alone.
+
+## Brand
+
+The brand is used sparingly so that it means something.
+
+- **Brave orange is for the brand mark, not the UI.** The accent for buttons, links, focus and
+  selection is Nala's interactive colour (`color-button-background`, `color-text-interactive`).
+  Brave orange (`color-primitive-brands-rorange-*`) appears in the logo and in places Nala's brand
+  tokens assign it.
+- **Logos come from Nala.** Use the Brave icon for the release channel the surface represents
+  (`brave-icon-release-color`, `brave-icon-beta-color`, `brave-icon-nightly-color`,
+  `brave-icon-dev-color`), or `brave-icon-monochrome` where colour is not possible. Product marks
+  are the `product-*` icons (for example `product-brave-leo`, `product-brave-wallet`). Do not
+  redraw, recolour, stretch, rotate, crop, outline or add effects to a logo, and leave clear space
+  around it.
+- **The lion is a logo, not an icon.** Do not use it as a generic button, status or decoration.
+- **Gradients come from Nala and are used for what they are named for:** `hero` for hero areas,
+  `brave-release`, `brave-beta` and `brave-nightly` for release-channel identity, and the `braveai`
+  gradients for AI identity. Never put body text on a gradient, and never invent one.
+- **Third-party marks** use Nala's `*-color` brand icons where one exists, unmodified. Do not
+  imply a partnership the product does not have.
+- **Marketing, launch and press material** goes through Brave's brand team. These guidelines cover
+  product UI only.
 
 ## Writing
 
@@ -171,6 +309,91 @@ changes.
   Directional icons such as back arrows mirror; icons that are not directional, such as a clock or
   a checkmark, do not. Check the surface in an RTL language before calling it done.
 - **No text in images.** Text is never baked into an icon, illustration or screenshot.
+
+## Privacy and consent
+
+Privacy is the reason people choose Brave. A surface never trades it for a metric.
+
+- **Off until chosen.** A feature that sends data off the device, beyond what it needs to work at
+  all, is off until the person turns it on. Nothing is opted in silently, by an update, or by a
+  pre-checked box.
+- **Say what leaves the device.** Before data is sent, say what is sent, to whom (Brave, a named
+  third party, or nowhere), why, and whether it is stored. Link to the relevant part of the privacy
+  policy for the detail.
+- **Equal choices.** Accepting and declining have the same size, weight and prominence, and are
+  equally easy to reach. Declining is never hidden behind a link, a second screen or a scroll.
+- **Ask once, at the moment of need.** Ask when the person first uses the feature, not at launch
+  or in a sequence of prompts. A "no" is respected: do not ask again unless the person starts the
+  feature again. A declined feature stays available in settings.
+- **Every choice can be changed.** Anything a person turns on can be turned off where they would
+  look for it, and turning it off is as easy as turning it on.
+- **No dark patterns.** No confirmshaming, false urgency, fake scarcity, disguised ads, nagging,
+  hidden costs, or forced continuity. A paid feature says it is paid before the flow begins.
+- **Promotions are rare and dismissable.** A callout for a feature appears where it is relevant,
+  can be dismissed in one action, and "Don't show again" is honoured.
+
+## Agent and AI surfaces
+
+These apply wherever an AI model writes content or an agent acts for the person: Leo in the
+browser, Bravebot, and anything similar.
+
+### Identity
+
+- **AI content is labelled.** Content written by a model is always distinguishable from content
+  written by the person, by Brave, or by a web page. Use the `braveai` gradients for AI identity
+  (an entry point, the assistant's mark), sparingly. They are not a background for whole surfaces.
+- **Say where the model runs.** The surface says whether a model runs on the device, on Brave's
+  servers or with a named third party, and what is sent to it, following
+  [Privacy and consent](#privacy-and-consent).
+
+### Streaming and control
+
+- **Stream in place.** Text appears where it will stay. Content above it does not move, and
+  formatting (lists, code blocks, tables) settles without reflowing what is already shown.
+- **Scrolling follows only if the person is at the bottom.** If they scroll up, streaming does not
+  pull them back down; a "jump to latest" control appears instead.
+- **Stop is always available.** While a model is generating or an agent is working, a visible stop
+  control replaces send, and Esc stops on desktop. Stopping keeps what was produced and marks it as
+  stopped.
+- **The person stays in control of the conversation.** They can copy, retry, edit their message,
+  and delete a conversation. The surface says how long conversations are kept.
+
+### Showing the work
+
+- **Say what the agent is doing**, in plain words, as it does it ("Searching the web", "Reading
+  example.com", "Editing 3 files"). Each step can be expanded to show what went in and what came
+  out. No fake progress bars and no spinner without a label on long work.
+- **Cite sources.** A claim drawn from the web, a page or a file links to its source where it is
+  made, showing the domain or file name. Content without a source is not presented as if it had
+  one.
+- **Errors are not answers.** When a model or tool fails, say what failed and offer a retry. Never
+  present a failure, a refusal or a partial result as a complete answer, and do not overstate
+  certainty.
+
+### Actions and permissions
+
+- **Ask before acting.** Before an action with effects outside the conversation (sending,
+  submitting, purchasing, deleting, writing files, sharing data, changing settings), the agent asks.
+  The prompt shows the exact action, its target, and the data involved, in words and not only as
+  raw parameters.
+- **Choices are specific.** For example "Allow once", "Always allow on example.com" and "Deny".
+  Default focus is never on an allow choice, and nothing allows automatically, including after a
+  timeout.
+- **Say where the request came from.** A prompt makes clear whether the action follows from what
+  the person asked, or from content the agent read (a page, an email, a document, tool output).
+- **Show what was done.** After an action, the result is shown in the conversation, with undo where
+  the action allows it.
+
+### Trust markings
+
+- **Untrusted content is contained and labelled.** Content the agent read from outside the
+  person's own instructions (web pages, emails, documents, tool output) is shown in a container
+  with a border and a text label naming its source. The marking survives high contrast and forced
+  colours, and does not rely on colour.
+- **Untrusted content never looks like UI.** Text, links or instructions inside untrusted content
+  are never rendered as buttons, prompts, or messages from the person or Brave.
+- **Trust labels on decisions are fixed.** The label on a permission prompt is drawn by the
+  surface, never from model or page output, and looks the same everywhere.
 
 ## Surfaces inside the Brave browser
 
@@ -250,8 +473,65 @@ the same standard as the browser does.
 - Every state is designed, and trust markings are distinct without colour.
 - Every string is in a string resource, has a translator description, follows [Writing](#writing),
   and the layout has been checked with long text and in a right-to-left language.
+- Motion uses Nala durations and easings, and the surface works with reduced motion.
+- Anything that sends data off the device follows [Privacy and consent](#privacy-and-consent).
+- An AI or agent surface follows [Agent and AI surfaces](#agent-and-ai-surfaces), including stop,
+  sources, permission prompts and trust markings.
 - Any gap (a missing token, component, icon or convention) is listed in the change description.
 - The repository's own design checks pass.
+
+### Checks you can run
+
+These find the common mistakes. A match is not always wrong (a token file legitimately contains
+hex values), but each one needs a reason. Run them on the files the change touches, and adjust the
+paths to the repository.
+
+```sh
+BASE=main  # the branch the change will merge into
+# Compares the working tree with $BASE; stage new files first so they are included.
+changed() { git diff --name-only "$BASE" -- "$@"; }
+
+# Web: raw colours, off-scale pixel values, hand-written shadows and timing, foreign icon sets.
+WEB=('*.css' '*.scss' '*.ts' '*.tsx' '*.svelte')
+changed "${WEB[@]}" | xargs grep -nE '#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\('
+changed "${WEB[@]}" | xargs grep -noE '\b[0-9]+px\b' \
+  | grep -vE ':(0|1|2|4|8|12|16|24|32|40|48|64|80|96|160)px$'
+changed "${WEB[@]}" | xargs grep -nE 'box-shadow:' | grep -v 'var(--leo-effect'
+changed "${WEB[@]}" | xargs grep -nE '(transition|animation)[^;]*[0-9.]+m?s\b' \
+  | grep -v 'var(--leo-duration'
+changed "${WEB[@]}" | xargs grep -nE \
+  "from '(lucide|react-icons|@mui/icons|@heroicons|@fortawesome|material-symbols)"
+
+# Every Leo icon name used exists in the pinned Nala version.
+changed "${WEB[@]}" | xargs grep -ohE '<(Icon|leo-icon)[^>]*name="[a-z0-9-]+"' \
+  | sed -E 's/.*name="([^"]+)".*/\1/' | sort -u | while read -r icon; do
+    [ -f "node_modules/@brave/leo/icons/$icon.svg" ] || echo "missing icon: $icon"
+  done
+
+# Desktop native views: literal colours instead of nala::kColor* ids.
+changed '*.cc' '*.h' | xargs grep -nE 'SkColorSetA?RGB|SK_Color[A-Z]'
+
+# Android: literal colours and sizes in resources and layouts.
+changed '*.xml' | xargs grep -nE '"#[0-9a-fA-F]{6,8}"|"[0-9]+(dp|sp)"'
+
+# iOS: literal colours and font sizes.
+changed '*.swift' | xargs grep -nE 'Color\(red:|UIColor\(red:|\.system\(size:'
+```
+
+For web surfaces, run an automated accessibility check (for example
+[axe-core](https://github.com/dequelabs/axe-core) through Playwright) and take screenshots in each
+mode the surface must support:
+
+```ts
+await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce', forcedColors: 'active' })
+await page.evaluate(() => {
+  document.documentElement.dataset.theme = 'dark'
+  document.documentElement.dir = 'rtl'
+})
+```
+
+Automated checks catch a fraction of accessibility problems. Also go through the surface with a
+keyboard only and with the platform's screen reader.
 
 ## Example: Bravebot
 
