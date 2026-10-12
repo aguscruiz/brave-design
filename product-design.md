@@ -315,10 +315,8 @@ The brand is used sparingly so that it means something.
   around it.
 - **The lion is a logo, not an icon.** Do not use it as a generic button, status or decoration.
 - **Gradients come from Nala and are used for what they are named for:** `hero` for hero areas,
-  `brave-release`, `brave-beta` and `brave-nightly` for release-channel identity, and the `braveai`
-  gradient for AI identity. `braveai` is defined in Nala's token sources but is not yet exported to
-  any platform build, so request it from Nala rather than copying its stops. Never put body text
-  on a gradient, and never invent one.
+  `brave-release`, `brave-beta` and `brave-nightly` for release-channel identity. Never put body
+  text on a gradient, and never invent one.
 - **Third-party marks** use Nala's `*-color` brand icons where one exists, unmodified. Do not
   imply a partnership the product does not have.
 - **Marketing, launch and press material** goes through Brave's brand team. These guidelines cover
@@ -417,9 +415,7 @@ browser, Bravebot, and anything similar.
 ### Identity
 
 - **AI content is labelled.** Content written by a model is always distinguishable from content
-  written by the person, by Brave, or by a web page. Use the `braveai` gradient for AI identity
-  (an entry point, the assistant's mark), sparingly, once Nala exports it. It is not a background
-  for whole surfaces.
+  written by the person, by Brave, or by a web page.
 - **Say where the model runs.** The surface says whether a model runs on the device, on Brave's
   servers or with a named third party, and what is sent to it, following
   [Privacy and consent](#privacy-and-consent).
