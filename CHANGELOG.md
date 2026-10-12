@@ -16,8 +16,19 @@ Adds rules, so this is a major change under the policy above:
   shortcuts, including how Esc works when a model is generating.
 - Privacy and consent: measurement only through privacy-preserving analytics.
 - Agent and AI surfaces: screen reader announcements and message structure.
+- Desktop browser: how Nala colours follow the user's theme through the colour provider, which
+  colours stay fixed, and the cases that need care (neutral barely showing an accent, custom
+  themes, the darker theme, WebUI), with a test matrix.
+- Android browser: the colour layers in Nala's `colors.xml`, how dynamic colour works through
+  Chromium's theme and `BraveDynamicColors`, when to use a theme attribute or a Nala resource,
+  icons, dimensions, and a test matrix.
 
 Also in this release:
+
+- Layout: motion, the desktop, Android and iOS guidance, and the checks move from
+  `product-design.md` into `guides/`, which it links to. Agents that fetch the file by URL fetch
+  each guide from the same version.
+- Reduced motion links to the patterns in Nala's tabs and dialog components.
 
 - Nala scales: the full spacing scale (including `spacing-none`), the radius scale with its
   platform radii, and a note that radius uses `xxl`, not `2xl`.

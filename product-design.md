@@ -12,14 +12,15 @@ is given as an example at the end.
 This section is for coding agents and the people directing them.
 
 1. **Find the surface.** Before changing UI, work out where it ships, and read the matching
-   section:
-   - a browser feature on desktop (native views or WebUI): [Desktop](#desktop-follow-chromium)
-   - a browser feature on Android: [Android](#android-follow-chromium-and-material-3-expressive)
-   - a browser feature on iOS: [iOS](#ios-follow-liquid-glass-and-the-human-interface-guidelines)
+   guide or section. The guides are in [guides/](guides/), next to this file and at the same
+   version:
+   - a browser feature on desktop (native views or WebUI): [guides/desktop.md](guides/desktop.md)
+   - a browser feature on Android: [guides/android.md](guides/android.md)
+   - a browser feature on iOS: [guides/ios.md](guides/ios.md)
    - anything outside the browser: [Separate apps](#separate-apps)
 
-   These sections apply to every surface: [Principles](#principles),
-   [Nala](#nala-is-the-source-of-design-values), [Motion](#motion),
+   These apply to every surface: [Principles](#principles),
+   [Nala](#nala-is-the-source-of-design-values), [Motion](guides/motion.md),
    [Interaction](#interaction), [Brand](#brand), [Writing](#writing) and
    [Privacy and consent](#privacy-and-consent). A surface where an AI
    model or agent produces content or takes actions also follows
@@ -226,59 +227,6 @@ Text("Saved").foregroundStyle(Color(braveSystemName: .textPrimary))
 // Don't
 Text("Saved").foregroundStyle(Color(red: 0.11, green: 0.11, blue: 0.11))
 ```
-
-## Motion
-
-Motion explains what changed. It is never decoration.
-
-| Token | Value | Use |
-| --- | --- | --- |
-| `duration-xs` | 50ms | Hover, press and toggle. Also the reduced-motion replacement. |
-| `duration-s` | 100ms | Small changes, tooltips, small menus and popovers. |
-| `duration-m` | 200ms | Larger menus and popovers, small panels. |
-| `duration-l` | 300ms | Panels, sheets, page transitions. The longest routine duration. |
-| `duration-xl` | 500ms | Not an animation length. The delay before a loading indicator. |
-
-| Token | Value | Use |
-| --- | --- | --- |
-| `easing-out` | `cubic-bezier(0, 0, 0.58, 1)` | Things that enter. |
-| `easing-in` | `cubic-bezier(0.5, 0, 0.5, 1)` | Things that leave. |
-| `easing-in-out` | `cubic-bezier(0.42, 0, 0.58, 1)` | Things that move or change in place. |
-| `easing-linear` | `cubic-bezier(0, 0, 1, 1)` | Progress only. |
-| `easing-in-out-back` | `cubic-bezier(0.7, -0.4, 0.4, 1.4)` | Overshoots. Rare emphasis only. |
-
-`easing-in` is symmetric, so it is closer to an in-out curve than a pure accelerate. It is still
-the token for exits. Do not write your own curve in its place; raise it with Nala instead.
-
-- **Use Nala's motion tokens.** They are generated for the web only: `--leo-duration-*` and
-  `--leo-easing-*` in the CSS variables, the `duration` and `easing` exports in `variables.ts`, and
-  `DurationS`, `EasingOut` and so on in the JSON. Skia, Android and iOS have none. On Android and
-  iOS, use the platform's system motion (Material springs, SwiftUI's standard animations) for
-  platform components. For anything custom, copy the values above and name the token, as
-  described under "Copies name their source":
-
-  ```kotlin
-  // duration-s, easing-out
-  PathInterpolator(0f, 0f, 0.58f, 1f)
-  ```
-
-  ```swift
-  // duration-s, easing-out
-  .timingCurve(0, 0, 0.58, 1, duration: 0.1)
-  ```
-
-- **Short and proportional.** Hover, press and toggle use `xs` or `s`. Tooltips and small menus
-  and popovers use `s`, larger ones use `m`. Panels, sheets and page transitions use `m` or `l`.
-  Nothing routine uses more than `l`. Leaving is quicker than entering, so give an exit the
-  shorter duration.
-- **Animate what is cheap.** Animate opacity and transform, not width, height, top or left, so
-  motion never drops frames or shifts layout.
-- **Never block.** A person can act during an animation. Nothing waits for an animation to finish
-  before responding to input.
-- **No loops and no flashing.** Nothing animates continuously except a progress indicator while
-  work is happening. Nothing flashes more than three times a second.
-- **Reduced motion.** When the platform asks for reduced motion, replace movement with a short fade
-  or an instant change. No information is carried by motion alone.
 
 ## Interaction
 
@@ -533,52 +481,13 @@ check that the surface still works on the oldest, falling back to the previous p
 newer one is unavailable. When Chromium, Google or Apple change a system pattern, the surface
 adopts it in the browser release that adopts it, not before.
 
-### Desktop: follow Chromium
+Each platform has its own guide:
 
-- Use Chromium's surfaces for what they are for: the side panel for a persistent companion view,
-  a bubble anchored to its toolbar button or omnibox icon for a short task, a tab-modal dialog for a
-  decision about the current page, and a WebUI page (`brave://`) for settings and full-page tools.
-  Do not build a surface Chromium already provides.
-- Match Chromium's layout: its dialog widths and button order per OS, its menu structure, its
-  spacing and corner radii (Chromium's layout provider supplies these to native views), and its
-  focus rings.
-- Native views take colours from `nala::kColor*` ids through the colour mixer so they follow the
-  browser's theme, including custom themes and high contrast. WebUI uses `@brave/leo` components
-  and `--leo-*` variables.
-- Follow Chromium's keyboard and accessibility behaviour: focus order, Esc to close, F6 between
-  panes, and the platform's screen reader.
-
-### Android: follow Chromium and Material 3 Expressive
-
-- Use Chromium Android's surfaces: bottom sheets for short tasks, full-screen activities for
-  settings, and the toolbar and menu entry points the browser already has.
-- Follow Material 3 Expressive for components, shape, type emphasis and motion (spring-based
-  transitions).
-- Colour reaches Material through the theme, not through Nala's `schemes` resources. The browser keeps
-  Chromium's Material theme and remaps Chromium's `baseline_*` palette to Nala's `primitive_*`
-  colours, so Material components draw in Brave's colours, and with Dynamic Colors on (Android 12+,
-  gated by `BraveDynamicColors`) the wallpaper replaces them. Read a colour that should follow the
-  wallpaper through a theme attribute (`?attr/colorOnSurface`, `?attr/colorPrimary`,
-  `?attr/colorOutline`), because a `@color/` resource, Nala's included, never follows it. Use the Nala
-  colour resource (`@color/systemfeedback_error_text`, brand colours) for what must stay fixed. A
-  custom drawable keeps its Nala default and calls `BraveDynamicColors.applyToFilledButtonIfEnabled`.
-  Check a change with Dynamic Colors on and off, in light and dark.
-- Draw edge to edge with correct insets, support predictive back, keep touch targets at least
-  48dp, and respect the system font scale and dark theme.
-
-### iOS: follow Liquid Glass and the Human Interface Guidelines
-
-- Follow Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
-  for navigation, sheets, menus, gestures and text.
-- Liquid Glass is the material for controls and navigation (toolbars, tab bars, sheets, floating
-  buttons), which sit above the content. Use the system's glass material and standard components
-  instead of drawing opaque bars or imitating glass with blur and colour. Content is not glass.
-- Tint glass with a Nala colour only for a primary action, and sparingly. Keep text on glass at the
-  system's legibility settings.
-- Support Dynamic Type, Reduce Transparency, Increase Contrast, Reduce Motion, safe areas, the
-  back-swipe gesture, and touch targets of at least 44pt.
-- Colours come from Nala's asset catalog so they follow light and dark. Use SF Symbols for system
-  controls and Leo icons for Brave concepts.
+- **Desktop**, native views and WebUI: [guides/desktop.md](guides/desktop.md), including how Nala
+  colours follow the user's theme.
+- **Android**: [guides/android.md](guides/android.md), including Nala tokens and Material dynamic
+  colour.
+- **iOS**: [guides/ios.md](guides/ios.md).
 
 ## Separate apps
 
@@ -607,7 +516,7 @@ the same standard as the browser does.
 - Every state is designed, and trust markings are distinct without colour.
 - Every string is in a string resource, has a translator description, follows [Writing](#writing),
   and the layout has been checked with long text and in a right-to-left language.
-- Motion uses Nala durations and easings, and the surface works with reduced motion.
+- Motion follows [Motion](guides/motion.md), and the surface works with reduced motion.
 - Destructive actions offer undo or a specific confirmation, loading and offline states exist,
   forms follow [Forms](#forms), focus moves and returns correctly, and new shortcuts conflict
   with nothing in the browser or OS.
@@ -616,78 +525,7 @@ the same standard as the browser does.
 - An AI or agent surface follows [Agent and AI surfaces](#agent-and-ai-surfaces), including stop,
   sources, permission prompts, screen reader announcements and trust markings.
 - Any gap (a missing token, component, icon or convention) is listed in the change description.
-- The repository's own design checks pass.
-
-### Checks you can run
-
-These find the common mistakes. A match is not always wrong (a token file legitimately contains
-hex values, and the hex check also matches issue references such as `#1234`), but each one needs
-a reason. They look only at the lines the change adds, printed as `file:line:text`, and need
-bash, not POSIX `sh`. Adjust the paths to the repository.
-
-```bash
-BASE=main  # the branch the change will merge into
-# Compares the working tree with $BASE; stage new files first so they are included.
-added() {
-  git diff -U0 --diff-filter=d "$BASE" -- "$@" | awk '
-    /^\+\+\+ b\// { file = substr($0, 7); next }
-    /^@@/ { match($0, /\+[0-9]+/); line = substr($0, RSTART + 1, RLENGTH - 1); next }
-    /^\+/ { print file ":" line ":" substr($0, 2); line++ }'
-}
-
-# Web: raw colours, off-scale pixel values, hand-written shadows and timing, foreign icon sets.
-WEB=('*.css' '*.scss' '*.ts' '*.tsx' '*.svelte')
-added "${WEB[@]}" | grep -E \
-  '(^|[^&[:alnum:]_])#([[:xdigit:]]{3,4}|[[:xdigit:]]{6}|[[:xdigit:]]{8})\b|rgba?\(|hsla?\('
-# 18 and 20 are icon sizes, so they pass here. Radii 26, 28 and 38 are
-# platform radii and need a reason.
-added "${WEB[@]}" | awk -F: '{
-  t = $0; sub(/^[^:]*:[^:]*:/, "", t)
-  while (match(t, /[0-9.]*[0-9]px/)) {
-    v = substr(t, RSTART, RLENGTH - 2); t = substr(t, RSTART + RLENGTH)
-    if (v !~ /^(0|1|2|4|8|12|16|18|20|24|32|40|48|64|80|96|160)$/)
-      print $1 ":" $2 ": " v "px"
-  }
-}'
-added "${WEB[@]}" | grep -E 'box-shadow:' | grep -v 'var(--leo-effect'
-added "${WEB[@]}" | grep -E '(transition|animation)[^;]*[0-9.]+m?s\b' \
-  | grep -v 'var(--leo-duration'
-added "${WEB[@]}" | grep -E \
-  "from '(lucide|react-icons|@mui/icons|@heroicons|@fortawesome|material-symbols)"
-
-# Web: --leo-* variables that do not exist in the pinned Nala version (from the project root).
-npx leo-check
-
-# Every Leo icon name used exists in the pinned Nala version.
-added "${WEB[@]}" | grep -ohE '<(Icon|leo-icon)[^>]*name="[a-z0-9-]+"' \
-  | sed -E 's/.*name="([^"]+)".*/\1/' | sort -u | while read -r icon; do
-    [ -f "node_modules/@brave/leo/icons/$icon.svg" ] || echo "missing icon: $icon"
-  done
-
-# Desktop native views: literal colours instead of nala::kColor* ids.
-added '*.cc' '*.h' | grep -E 'SkColorSetA?RGB|SK_Color[A-Z]'
-
-# Android: literal colours and sizes in resources and layouts.
-added '*.xml' | grep -E '"#[0-9a-fA-F]{6,8}"|"[0-9]+(dp|sp)"'
-
-# iOS: literal colours and font sizes.
-added '*.swift' | grep -E 'Color\(red:|UIColor\(red:|\.system\(size:'
-```
-
-For web surfaces, run an automated accessibility check (for example
-[axe-core](https://github.com/dequelabs/axe-core) through Playwright) and take screenshots in each
-mode the surface must support:
-
-```ts
-await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce', forcedColors: 'active' })
-await page.evaluate(() => {
-  document.documentElement.dataset.theme = 'dark'
-  document.documentElement.dir = 'rtl'
-})
-```
-
-Automated checks catch a fraction of accessibility problems. Also go through the surface with a
-keyboard only and with the platform's screen reader.
+- The [checks](guides/checks.md) and the repository's own design checks pass.
 
 ## Example: Bravebot
 
