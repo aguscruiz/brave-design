@@ -8,6 +8,15 @@ Versions follow [semantic versioning](https://semver.org/), applied to the guide
   example, a clarified recommendation).
 - **Patch**: wording, links and typo fixes with no change in meaning.
 
+## Unreleased
+
+Adds rules, so this is a major change under the policy above:
+
+- Interaction: destructive actions, loading and network states, forms, focus, and keyboard
+  shortcuts, including how Esc works when a model is generating.
+- Privacy and consent: measurement only through privacy-preserving analytics.
+- Agent and AI surfaces: screen reader announcements and message structure.
+
 ## 1.0.0 - 2026-10-12
 
 First release of [`product-design.md`](product-design.md):

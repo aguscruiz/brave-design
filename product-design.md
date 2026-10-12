@@ -19,8 +19,9 @@ This section is for coding agents and the people directing them.
    - anything outside the browser: [Separate apps](#separate-apps)
 
    These sections apply to every surface: [Principles](#principles),
-   [Nala](#nala-is-the-source-of-design-values), [Motion](#motion), [Brand](#brand),
-   [Writing](#writing) and [Privacy and consent](#privacy-and-consent). A surface where an AI
+   [Nala](#nala-is-the-source-of-design-values), [Motion](#motion),
+   [Interaction](#interaction), [Brand](#brand), [Writing](#writing) and
+   [Privacy and consent](#privacy-and-consent). A surface where an AI
    model or agent produces content or takes actions also follows
    [Agent and AI surfaces](#agent-and-ai-surfaces).
 2. **Find the repository's own layer.** Look for the repository's design guidelines, its semantic
@@ -239,6 +240,63 @@ Motion explains what changed. It is never decoration.
 - **Reduced motion.** When the platform asks for reduced motion, replace movement with a short fade
   or an instant change. No information is carried by motion alone.
 
+## Interaction
+
+### Destructive actions
+
+- **Undo over confirmation.** An action that can be undone happens at once and offers undo (a
+  toast, a snackbar, or the platform's equivalent) long enough to be noticed and used.
+- **Confirm only what cannot be undone.** The confirmation names the consequence, and its button
+  repeats it ("Delete 12 files", "Clear all history"), not "OK" or "Yes". Default focus is on the
+  choice that keeps things as they are.
+
+### Loading and network
+
+- **No flicker.** Work that usually finishes quickly shows no indicator at first. Show one only
+  after a delay of `duration-xl` (500ms), and once shown, keep it long enough to be read.
+- **Match the indicator to what is known.** A skeleton when the shape of the content is known,
+  sized like the content so nothing shifts when it arrives. A determinate progress bar when the
+  length of the work is known. A labelled spinner otherwise.
+- **Offline is a state, not an error.** When the network is unavailable, say so, keep what is
+  already loaded, offer a retry, and recover on its own when the connection returns. Do not
+  discard what the person typed.
+
+### Forms
+
+- **Labels stay visible.** Every field has a label outside the field. A placeholder is an example
+  of the input, never the label.
+- **Mark required or optional, whichever is fewer**, and do it the same way throughout a surface.
+- **Validate when the person leaves a field or submits**, not on every keystroke. Once an error is
+  shown, clear it as soon as the input is fixed.
+- **Errors sit at the field** and are linked to it for assistive technology (for example
+  `aria-describedby` on the web). On submit, move focus to the first field with an error.
+- **Do not disable submit to signal invalid input.** Let the person submit, then show what needs
+  fixing.
+- **Never block paste or autofill.** Use the right input type and autofill hints (`type`,
+  `autocomplete`, Android autofill hints, iOS `textContentType`) so password managers and the
+  platform keyboard work.
+
+### Focus
+
+- **Focus follows the person.** Opening a dialog, sheet or menu moves focus into it. A modal keeps
+  focus inside it until it closes. Closing returns focus to the element that opened it.
+- **Focus is always visible**, using the platform's focus ring. Never remove a focus indicator
+  without replacing it.
+- **New content does not steal focus.** A row that appears, a toast or a streamed reply leaves
+  focus where it was.
+- **Nothing is available only on hover.** Anything revealed on hover is also revealed on keyboard
+  focus and reachable on touch, where there is no hover.
+
+### Keyboard shortcuts
+
+- **Do not override browser or OS shortcuts.** Check a new shortcut against Chromium's and the
+  OS's before using it. A shortcut that conflicts is not shipped.
+- **Shortcuts are accelerators.** Every shortcut has a visible control that does the same thing.
+- **Show the platform's keys.** ⌘ and ⌥ on macOS and iOS, Ctrl and Alt elsewhere, in the
+  platform's order and format, in tooltips and menus.
+- **Esc closes one layer at a time**: the topmost menu, popover or dialog, then the next. While a
+  model is generating or an agent is working, Esc stops it first; the next Esc closes as usual.
+
 ## Brand
 
 The brand is used sparingly so that it means something.
@@ -342,6 +400,10 @@ Privacy is the reason people choose Brave. A surface never trades it for a metri
   hidden costs, or forced continuity. A paid feature says it is paid before the flow begins.
 - **Promotions are rare and dismissable.** A callout for a feature appears where it is relevant,
   can be dismissed in one action, and "Don't show again" is honoured.
+- **Measure only through privacy-preserving analytics.** Usage is measured only through the
+  product's approved system (P3A in the browser), which follows the person's analytics setting.
+  No identifiers, no content, no URLs, and no third-party analytics or tracking SDKs. If a question
+  cannot be answered that way, it is not measured.
 
 ## Agent and AI surfaces
 
@@ -364,8 +426,8 @@ browser, Bravebot, and anything similar.
 - **Scrolling follows only if the person is at the bottom.** If they scroll up, streaming does not
   pull them back down; a "jump to latest" control appears instead.
 - **Stop is always available.** While a model is generating or an agent is working, a visible stop
-  control replaces send, and Esc stops on desktop. Stopping keeps what was produced and marks it as
-  stopped.
+  control replaces send, and Esc stops on desktop (see [Keyboard shortcuts](#keyboard-shortcuts)).
+  Stopping keeps what was produced and marks it as stopped.
 - **The person stays in control of the conversation.** They can copy, retry, edit their message,
   and delete a conversation. The surface says how long conversations are kept.
 
@@ -394,6 +456,19 @@ browser, Bravebot, and anything similar.
   the person asked, or from content the agent read (a page, an email, a document, tool output).
 - **Show what was done.** After an action, the result is shown in the conversation, with undo where
   the action allows it.
+
+### Screen readers
+
+- **Announce a reply once.** Streamed text is not read token by token. A polite live region (or
+  the platform's announcement API) says that a reply is being written, then announces it when it
+  is complete or stopped.
+- **Announce agent steps and their outcome** ("Reading example.com", "Done", "Failed: could not
+  reach example.com") politely, without moving focus.
+- **Permission prompts take focus.** A prompt that needs a decision is announced and receives
+  focus on the least permissive choice, so a screen reader user meets it before anything else.
+- **Messages have structure.** Each message is navigable as a unit, says who wrote it (the person,
+  the assistant, or the named source of untrusted content), and keeps headings, lists and code
+  blocks as real structure rather than styled text.
 
 ### Trust markings
 
@@ -487,9 +562,13 @@ the same standard as the browser does.
 - Every string is in a string resource, has a translator description, follows [Writing](#writing),
   and the layout has been checked with long text and in a right-to-left language.
 - Motion uses Nala durations and easings, and the surface works with reduced motion.
-- Anything that sends data off the device follows [Privacy and consent](#privacy-and-consent).
+- Destructive actions offer undo or a specific confirmation, loading and offline states exist,
+  forms follow [Forms](#forms), focus moves and returns correctly, and new shortcuts conflict
+  with nothing in the browser or OS.
+- Anything that sends data off the device follows [Privacy and consent](#privacy-and-consent),
+  and any measurement goes only through the approved analytics system.
 - An AI or agent surface follows [Agent and AI surfaces](#agent-and-ai-surfaces), including stop,
-  sources, permission prompts and trust markings.
+  sources, permission prompts, screen reader announcements and trust markings.
 - Any gap (a missing token, component, icon or convention) is listed in the change description.
 - The repository's own design checks pass.
 

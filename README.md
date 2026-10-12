@@ -5,8 +5,8 @@ them in any repository and keep every surface at the same design standard.
 
 The guidelines cover where design values come from ([Nala](https://github.com/brave/leo/), Brave's
 design system), which platform conventions each surface follows (Chromium desktop, Android, iOS
-and separate apps), motion, brand, how UI text is written and localized, privacy and consent,
-agent and AI surfaces, and what to check before calling a surface done.
+and separate apps), motion, interaction patterns, brand, how UI text is written and localized,
+privacy and consent, agent and AI surfaces, and what to check before calling a surface done.
 
 ## Guidelines
 
