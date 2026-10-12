@@ -78,7 +78,7 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
 | --- | --- | --- |
 | Web, Electron, browser WebUI | `@brave/leo/tokens/css/variables.css` (`--leo-*`), or a variant such as `variables-browser.css`; a Tailwind preset in `tokens/tailwind` | React wrappers in `@brave/leo/react`, web components in `@brave/leo/web-components`, SVGs in `@brave/leo/icons` |
 | Desktop browser native views (C++) | `tokens/skia/nala_color_id.h` (`nala::kColor*` colour ids for the Chromium colour pipeline), `spacing.h`, `radius.h` | Leo icons in `icons-skia` |
-| Android | `tokens/android` resources: `values` and `values-night` colours, `dimens.xml`, `styles.xml` | Leo icons as drawables |
+| Android | `tokens/android` resources: `values` and `values-night` colours, and text appearances in `styles.xml` with their sizes in `dimens.xml`. There is no spacing or radius, so a product defines those in `dp` from the Nala scales | Leo icons as drawables |
 | iOS | `tokens/ios-swift`: `Colors.xcassets`, `ColorSetAccessors.swift`, `Gradients.swift` | Leo icons in the asset catalog |
 | Anything else (terminal, Rust, scripts) | `tokens/json/styles-*.json` | None |
 
@@ -105,7 +105,9 @@ Nala builds the same tokens for each platform. Use the build for the platform yo
 - **Typography uses the system font.** Nala's type tokens set the system UI stack (SF on Apple
   platforms, Roboto on Android, Segoe UI on Windows). Use the role tokens (`font-heading-h1` to
   `-h4`, `font-large-*`, `font-default-*`, `font-small-*`, `font-x-small-*`, `font-monospace-*`)
-  instead of setting size, weight and line height separately.
+  instead of setting size, weight and line height separately. Nala's generated Android text styles
+  currently name `sf_pro_text`, which is an Apple font; the browser does not use them, so use its
+  own Android text appearances until Nala fixes this.
 - **Icons come from Nala.** Take every icon from the [Nala repository](https://github.com/brave/leo/),
   through the platform build in the table above, and check that the icon name exists in the pinned
   Nala version. Do not draw icons, copy SVGs from elsewhere, or add another icon set (Material
@@ -314,7 +316,9 @@ The brand is used sparingly so that it means something.
 - **The lion is a logo, not an icon.** Do not use it as a generic button, status or decoration.
 - **Gradients come from Nala and are used for what they are named for:** `hero` for hero areas,
   `brave-release`, `brave-beta` and `brave-nightly` for release-channel identity, and the `braveai`
-  gradients for AI identity. Never put body text on a gradient, and never invent one.
+  gradient for AI identity. `braveai` is defined in Nala's token sources but is not yet exported to
+  any platform build, so request it from Nala rather than copying its stops. Never put body text
+  on a gradient, and never invent one.
 - **Third-party marks** use Nala's `*-color` brand icons where one exists, unmodified. Do not
   imply a partnership the product does not have.
 - **Marketing, launch and press material** goes through Brave's brand team. These guidelines cover
@@ -413,8 +417,9 @@ browser, Bravebot, and anything similar.
 ### Identity
 
 - **AI content is labelled.** Content written by a model is always distinguishable from content
-  written by the person, by Brave, or by a web page. Use the `braveai` gradients for AI identity
-  (an entry point, the assistant's mark), sparingly. They are not a background for whole surfaces.
+  written by the person, by Brave, or by a web page. Use the `braveai` gradient for AI identity
+  (an entry point, the assistant's mark), sparingly, once Nala exports it. It is not a background
+  for whole surfaces.
 - **Say where the model runs.** The surface says whether a model runs on the device, on Brave's
   servers or with a named third party, and what is sent to it, following
   [Privacy and consent](#privacy-and-consent).
@@ -514,9 +519,16 @@ adopts it in the browser release that adopts it, not before.
 - Use Chromium Android's surfaces: bottom sheets for short tasks, full-screen activities for
   settings, and the toolbar and menu entry points the browser already has.
 - Follow Material 3 Expressive for components, shape, type emphasis and motion (spring-based
-  transitions). Map Nala's `schemes` colour tokens (`primary`, `on-primary`, `primary-container`,
-  `surface`, `outline` and the rest, which follow Material's colour roles) onto the Material
-  theme, so Material components draw in Brave's colours.
+  transitions).
+- Colour reaches Material through the theme, not through Nala's `schemes` resources. The browser keeps
+  Chromium's Material theme and remaps Chromium's `baseline_*` palette to Nala's `primitive_*`
+  colours, so Material components draw in Brave's colours, and with Dynamic Colors on (Android 12+,
+  gated by `BraveDynamicColors`) the wallpaper replaces them. Read a colour that should follow the
+  wallpaper through a theme attribute (`?attr/colorOnSurface`, `?attr/colorPrimary`,
+  `?attr/colorOutline`), because a `@color/` resource, Nala's included, never follows it. Use the Nala
+  colour resource (`@color/systemfeedback_error_text`, brand colours) for what must stay fixed. A
+  custom drawable keeps its Nala default and calls `BraveDynamicColors.applyToFilledButtonIfEnabled`.
+  Check a change with Dynamic Colors on and off, in light and dark.
 - Draw edge to edge with correct insets, support predictive back, keep touch targets at least
   48dp, and respect the system font scale and dark theme.
 
